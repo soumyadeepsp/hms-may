@@ -1,0 +1,25 @@
+{
+  "name": "hms-may",
+  "version": "1.0.0",
+  "description": "We will be building the backend for a hospital management system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hospital",
+    "management",
+    "coding",
+    "ninjas",
+    "backend",
+    "nodejs",
+    "learning"
+  ],
+  "author": "Soumyadeep Paul",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  },
+  "type": "module"
+}
