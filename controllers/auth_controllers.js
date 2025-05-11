@@ -2,12 +2,19 @@ import User from '../models/user.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/constants.js';
+import { sendEmail, generateOTP } from '../config/helper_functions.js';
 
 export const signup = async (req, res) => {
     const { username, email, password, type, mobile } = req.body;
+    const userPresent = await User.findOne({ email });
+    if (userPresent) {
+        // there is already a user with this email
+        return res.status(409).json({ error: 'User with this email already exists' });
+    }
     const user = new User({ username, email, password, type, mobile });
     try {
         await user.save();
+        sendEmail(email, 'Welcome to our platform', `You have signed up successfully. Please click <a href="http://localhost:3000/user/verify-email?email=${email}">here</a> to verify your email.`);
         return res.status(201).json({ message: 'You have signed up successfully. Please signin now.' });
     } catch (error) {
         return res.status(400).json({ error: 'Error creating user' });
@@ -35,4 +42,45 @@ export const signin = async (req, res) => {
 export const signout = (req, res) => {
     res.clearCookie('token');
     return res.status(200).json({ message: 'Signout successful' });
+};
+
+export const sendOtpForVerifyingEmail = async (req, res) => {
+    const otp = generateOTP();
+    const email = req.query.email;
+    console.log(email);
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ error: 'No user found with this email' });
+    }
+    user.otp = otp;
+    await user.save();
+    sendEmail(email, 'Verify your email', `Your OTP is ${otp}`);
+    // I will delete the OTP after 30 seconds
+    user.deleteOtp();
+    return res.status(200).json({ message: 'OTP sent to your email' });
+}
+
+export const verifyEmail = async (req, res) => {
+    const { email, password, otp } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ error: 'No user found with this email' });
+    }
+    const storedPassword = user.password; // this is the hashed password I have stored in the DB
+    console.log(password, storedPassword);
+    const isPasswordValid = await bcrypt.compare(password, storedPassword);
+    if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Invalid password' });
+    }
+    // if the password is valid, then I will check if the OTP is correct
+    console.log(user.otp, otp);
+    if (user.otp != otp) {
+        return res.status(401).json({ error: 'Invalid OTP or the OTP has expired' });
+    } else {
+        // if the OTP is correct, then I will update the user in the DB
+        user.emailVerified = true;
+        user.otp = undefined; // remove the OTP from the DB
+        await user.save();
+        return res.status(200).json({ message: 'Email verified successfully' });
+    }
 };

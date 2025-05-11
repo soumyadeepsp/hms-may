@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     type: { type: String, required: true, enum: ['patient', 'doctor'] },
     mobile: { type: Number, required: true },
     mobileVerified: { type: Boolean, required: true, default: false },
+    emailVerified: { type: Boolean, required: true, default: false },
     otp: { type: Number },
     otpVerified: { type: Boolean, default: false },
     createdAt: { type: Date, required: true, default: Date.now },
@@ -29,6 +30,15 @@ userSchema.pre('save', async function (next) {
         next(err);
     }
 });
+
+// create a function that will delete the otp after 30 seconds of saving it
+userSchema.methods.deleteOtp = async function () {
+    const user = this;
+    setTimeout(async () => {
+        user.otp = undefined;
+        await user.save();
+    }, 180000);
+};
 
 // create a user model
 const User = mongoose.model('User', userSchema);
