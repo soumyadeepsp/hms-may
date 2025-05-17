@@ -37,7 +37,7 @@ userSchema.methods.deleteOtp = async function () {
     setTimeout(async () => {
         user.otp = undefined;
         await user.save();
-    }, 180000);
+    }, 30000);
 };
 
 // create a user model

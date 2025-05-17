@@ -4,7 +4,10 @@ import express from 'express';
 const app = express();
 const port = 3000;
 import cookieParser from 'cookie-parser';
-import { signup, signin, signout, sendOtpForVerifyingEmail, verifyEmail } from './controllers/auth_controllers.js';
+import { signup, signin, 
+    signout, sendOtpForVerifyingEmail, 
+    verifyEmail, sendOtpForVerifyingMobile, 
+    verifyMobile } from './controllers/auth_controllers.js';
 import { checkAuthenticaion } from './middlewares/auth_middleware.js';
 
 import './config/mongoose.js'; // import the mongoose config file
@@ -21,6 +24,8 @@ app.get('/', checkAuthenticaion, (req, res) => {
 app.get('/user/signout', signout);
 app.get('/user/send-otp-verify-email', sendOtpForVerifyingEmail);
 app.post('/user/verify-email', verifyEmail);
+app.get('/user/send-otp-verify-mobile', sendOtpForVerifyingMobile);
+app.post('/user/verify-mobile', verifyMobile);
 
 app.listen(port, (err) => {
     if (err) {

@@ -2,7 +2,17 @@ import User from '../models/user.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/constants.js';
-import { sendEmail, generateOTP } from '../config/helper_functions.js';
+import { sendEmail, generateOTP, sendSMS } from '../config/helper_functions.js';
+import { OAuth2Client } from 'google-auth-library';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, 
+    REDIRECR_URI
+ } from '../config/constants.js';
+
+const client = new OAuth2Client({
+    clientId: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    redirectUri: REDIRECR_URI // Optional, depends on your app type
+});
 
 export const signup = async (req, res) => {
     const { username, email, password, type, mobile } = req.body;
@@ -67,7 +77,6 @@ export const verifyEmail = async (req, res) => {
         return res.status(404).json({ error: 'No user found with this email' });
     }
     const storedPassword = user.password; // this is the hashed password I have stored in the DB
-    console.log(password, storedPassword);
     const isPasswordValid = await bcrypt.compare(password, storedPassword);
     if (!isPasswordValid) {
         return res.status(401).json({ error: 'Invalid password' });
@@ -84,3 +93,48 @@ export const verifyEmail = async (req, res) => {
         return res.status(200).json({ message: 'Email verified successfully' });
     }
 };
+
+export const sendOtpForVerifyingMobile = async (req, res) => {
+    const otp = generateOTP();
+    const mobile = req.query.mobile;
+    console.log(mobile);
+    const user = await User.findOne({ mobile });
+    if (!user) {
+        return res.status(404).json({ error: 'No user found with this mobile number' });
+    }
+    user.otp = otp;
+    console.log(otp);
+    await user.save();
+    const response = await sendSMS(mobile, otp);
+    // I will delete the OTP after 30 seconds
+    user.deleteOtp();
+    console.log(response);
+    if (response.return==false) {
+        return res.status(500).json({ error: 'Error sending OTP' });
+    }
+    return res.status(200).json({ message: 'OTP sent to your mobile' });
+}
+
+export const verifyMobile = async (req, res) => {
+    const { mobile, password, otp } = req.body;
+    const user = await User.findOne({ mobile });
+    if (!user) {
+        return res.status(404).json({ error: 'No user found with this mobile number' });
+    }
+    const storedPassword = user.password; // this is the hashed password I have stored in the DB
+    const isPasswordValid = await bcrypt.compare(password, storedPassword);
+    if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Invalid password' });
+    }
+    // if the password is valid, then I will check if the OTP is correct
+    console.log(user.otp, otp);
+    if (user.otp != otp) {
+        return res.status(401).json({ error: 'Invalid OTP or the OTP has expired' });
+    } else {
+        // if the OTP is correct, then I will update the user in the DB
+        user.mobileVerified = true;
+        user.otp = undefined; // remove the OTP from the DB
+        await user.save();
+        return res.status(200).json({ message: 'Mobile number verified successfully' });
+    }
+}
