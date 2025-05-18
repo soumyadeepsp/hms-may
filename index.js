@@ -9,6 +9,9 @@ import { signup, signin,
     verifyEmail, sendOtpForVerifyingMobile, 
     verifyMobile } from './controllers/auth_controllers.js';
 import { checkAuthenticaion } from './middlewares/auth_middleware.js';
+import { addDoctors, addTokensForAllDoctors, 
+    searchDoctors
+ } from './controllers/doctor_controllers.js';
 
 import './config/mongoose.js'; // import the mongoose config file
 import './config/nodemailer.js'; // import the nodemailer config file
@@ -26,6 +29,11 @@ app.get('/user/send-otp-verify-email', sendOtpForVerifyingEmail);
 app.post('/user/verify-email', verifyEmail);
 app.get('/user/send-otp-verify-mobile', sendOtpForVerifyingMobile);
 app.post('/user/verify-mobile', verifyMobile);
+
+app.post('/add-doctors', addDoctors);
+app.get('/add-tokens', addTokensForAllDoctors);
+
+app.get('/search-doctors', searchDoctors);
 
 app.listen(port, (err) => {
     if (err) {

@@ -7,6 +7,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, 
     REDIRECR_URI
  } from '../config/constants.js';
+import Session from '../models/sessions.js';
 
 const client = new OAuth2Client({
     clientId: GOOGLE_CLIENT_ID,
@@ -45,11 +46,21 @@ export const signin = async (req, res) => {
     } else {
         const token = jwt.sign({ email: user.email, password: user.password }, JWT_SECRET, { expiresIn: '1h' });
         res.cookie('token', token);
+        // I will create a session for the user
+        const session = new Session({
+            userId: user._id,
+            token: token,
+            startTime: new Date(),
+        });
+        await session.save();
         return res.status(200).json({ message: 'Signin successful' });
     }
 };
 
-export const signout = (req, res) => {
+export const signout = async (req, res) => {
+    // I will delete the session from the DB
+    const token = req.cookies.token;
+    await Session.deleteOne({ token });
     res.clearCookie('token');
     return res.status(200).json({ message: 'Signout successful' });
 };

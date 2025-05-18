@@ -1,6 +1,7 @@
 import { JWT_SECRET } from '../config/constants.js';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
+import Session from '../models/sessions.js';
 
 export const checkAuthenticaion = (req, res, next) => {
     const token = req.cookies.token;
@@ -28,6 +29,28 @@ export const checkAuthenticaion = (req, res, next) => {
         // if the password is correct, then I will attach the user to the request object
         // this is because, if the user info is needed in the controller, I won't have to make further DB calls
         req.user = user;
+        const session = await Session.findOne({ token });
+        if (!session) {
+            return res.status(401).json({ error: 'This is an invalid token' });
+        }
+        const currentTime = new Date();
+        const sessionStartTime = session.startTime;
+        // i need to check if 75% of the session time has passed
+        const sessionDuration = 60 * 60 * 1000; // 1 hour
+        const sessionDurationPassed = currentTime - sessionStartTime;
+        const sessionDurationPassedPercentage = (sessionDurationPassed / sessionDuration) * 100;
+        if (sessionDurationPassedPercentage > 75) {
+            // if 75% of the session time has passed, then I will update the session start time
+            session.startTime = currentTime;
+            // i will create a new token for this user
+            const newToken = jwt.sign({ email: user.email, password: user.password }, JWT_SECRET, { expiresIn: '1h' });
+            session.token = newToken; // this is the DB
+            // I will also update the cookie with the new token
+            res.cookie('token', newToken, {
+                maxAge: 60 * 60 * 1000, // 1 hour
+            });
+            await session.save();
+        }
         next();
     });
 }
