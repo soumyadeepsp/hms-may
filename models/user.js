@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema({
     mobileVerified: { type: Boolean, required: true, default: false },
     emailVerified: { type: Boolean, required: true, default: false },
     otp: { type: Number },
+    // i want feedback given to store an array of feedback ids 
+    feedbackGiven: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
+    feedbackTaken:[{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
     otpVerified: { type: Boolean, default: false },
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, default: Date.now }

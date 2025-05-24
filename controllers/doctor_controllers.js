@@ -1,5 +1,6 @@
 import User from '../models/user.js';
 import DoctorToken from '../models/doctortokens.js';
+import Feedback from '../models/feedback.js';
 
 export const addDoctors = async (req, res) => {
     const listOfDoctors = req.body.listOfDoctors;
@@ -75,4 +76,38 @@ export const searchDoctors = async (req, res) => {
         }
     }
     res.status(200).json(doctors);
+}
+
+export const acceptFeeback = async (req, res) => {
+    const { doctorId, patientId, rating, comment } = req.body;
+    if (!doctorId || !rating || !patientId || !comment) {
+        return res.status(400).json({ error: 'Some information that are required are not present.' });
+    }
+    // Here you would typically save the feedback to the database
+    const feedback = await new Feedback({
+        doctorId,
+        patientId,
+        rating,
+        comment
+    });
+    // For now, we will just log it
+    await feedback.save();
+    const patient = await User.findById(patientId);
+    const doctor = await User.findById(doctorId);
+
+    if (patient.feedbackGiven) {
+        patient.feedbackGiven.push(feedback._id);
+    } else {
+        patient.feedbackGiven = [feedback._id];
+    }
+    if (doctor.feedbackReceived) {
+        doctor.feedbackReceived.push(feedback._id);
+    } else {
+        doctor.feedbackReceived = [feedback._id];
+    }
+    await patient.save();
+    await doctor.save();
+
+    console.log(`Feedback for doctor ${doctorId}: ${feedback}`);
+    return res.status(200).json({ message: 'Feedback accepted successfully' });
 }

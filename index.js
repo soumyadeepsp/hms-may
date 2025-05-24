@@ -10,7 +10,7 @@ import { signup, signin,
     verifyMobile } from './controllers/auth_controllers.js';
 import { checkAuthenticaion } from './middlewares/auth_middleware.js';
 import { addDoctors, addTokensForAllDoctors, 
-    searchDoctors
+    searchDoctors, acceptFeeback
  } from './controllers/doctor_controllers.js';
 
 import './config/mongoose.js'; // import the mongoose config file
@@ -34,6 +34,7 @@ app.post('/add-doctors', addDoctors);
 app.get('/add-tokens', addTokensForAllDoctors);
 
 app.get('/search-doctors', searchDoctors);
+app.post('/doctors/add-feedback', acceptFeeback);
 
 app.listen(port, (err) => {
     if (err) {
