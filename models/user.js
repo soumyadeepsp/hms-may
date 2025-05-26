@@ -15,6 +15,13 @@ const userSchema = new mongoose.Schema({
     // i want feedback given to store an array of feedback ids 
     feedbackGiven: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
     feedbackTaken:[{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
+    // i want to store the available slots of the doctor in this field in the form of a JSON
+    // the key will be the date and the value will be an array of slots available on that date
+    // for example: { "2023-10-01": ["09:00", "10:00", "11:00"], "2023-10-02": ["09:00", "10:00"] }
+    availableSlots: { type: Object, default: {} },
+    // i want to store the appointments of the user in this field in the form of an array of appointment ids
+    appointmentsAsPatient: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
+    appointmentsAsDoctor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
     otpVerified: { type: Boolean, default: false },
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, default: Date.now }

@@ -5,14 +5,14 @@ import { JWT_SECRET } from '../config/constants.js';
 import { sendEmail, generateOTP, sendSMS } from '../config/helper_functions.js';
 import { OAuth2Client } from 'google-auth-library';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, 
-    REDIRECR_URI
+    REDIRECT_URI
  } from '../config/constants.js';
 import Session from '../models/sessions.js';
 
 const client = new OAuth2Client({
     clientId: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    redirectUri: REDIRECR_URI // Optional, depends on your app type
+    redirectUri: REDIRECT_URI // Optional, depends on your app type
 });
 
 export const signup = async (req, res) => {
@@ -34,27 +34,28 @@ export const signup = async (req, res) => {
 
 export const signin = async (req, res) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-        // there is no user with this email
-        return res.status(404).json({ error: 'No user found with this Email ID' });
-    }
-    const storedPassword = user.password; // this is the hashed password I have stored in the DB
-    const isPasswordValid = await bcrypt.compare(password, storedPassword);
-    if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Invalid password' });
-    } else {
-        const token = jwt.sign({ email: user.email, password: user.password }, JWT_SECRET, { expiresIn: '1h' });
-        res.cookie('token', token);
-        // I will create a session for the user
-        const session = new Session({
-            userId: user._id,
-            token: token,
-            startTime: new Date(),
-        });
-        await session.save();
-        return res.status(200).json({ message: 'Signin successful' });
-    }
+    // const user = await User.findOne({ email });
+    // if (!user) {
+    //     // there is no user with this email
+    //     return res.status(404).json({ error: 'No user found with this Email ID' });
+    // }
+    // const storedPassword = user.password; // this is the hashed password I have stored in the DB
+    // const isPasswordValid = await bcrypt.compare(password, storedPassword);
+    // if (!isPasswordValid) {
+    //     return res.status(401).json({ error: 'Invalid password' });
+    // } else {
+    //     const token = jwt.sign({ email: user.email, password: user.password }, JWT_SECRET, { expiresIn: '1h' });
+    //     res.cookie('token', token);
+    //     // I will create a session for the user
+    //     const session = new Session({
+    //         userId: user._id,
+    //         token: token,
+    //         startTime: new Date(),
+    //     });
+    //     await session.save();
+    //     return res.status(200).json({ message: 'Signin successful' });
+    // }
+    signinHelperFunction(email, password, req, res);
 };
 
 export const signout = async (req, res) => {

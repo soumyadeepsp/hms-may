@@ -111,3 +111,17 @@ export const acceptFeeback = async (req, res) => {
     console.log(`Feedback for doctor ${doctorId}: ${feedback}`);
     return res.status(200).json({ message: 'Feedback accepted successfully' });
 }
+
+export const setAvailableSlots = async (req, res) => {
+    const { doctorId, availableSlots } = req.body;
+    if (!doctorId || !availableSlots) {
+        return res.status(400).json({ error: 'Doctor ID and available slots are required.' });
+    }
+    const doctor = await User.findById(doctorId);
+    if (!doctor) {
+        return res.status(404).json({ error: 'Doctor not found.' });
+    }
+    doctor.availableSlots = availableSlots;
+    await doctor.save();
+    return res.status(200).json({ message: 'Available slots updated successfully' });
+}

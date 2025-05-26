@@ -1,7 +1,5 @@
 // create a Feedback schema
 import mongoose from 'mongoose';
-import User from './user.js';
-import { acceptFeeback } from '../controllers/doctor_controllers.js';
 
 const feedbackSchema = new mongoose.Schema({
     doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
